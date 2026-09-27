@@ -1,0 +1,28 @@
+{
+  "name": "padel-club",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node --test shared/test/*.test.ts server/test/*.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "npm run build -w @padel/client",
+    "dev": "npm run dev -w @padel/client",
+    "start": "node server/src/index.ts",
+    "gate": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/three": "^0.171.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.2"
+  }
+}
