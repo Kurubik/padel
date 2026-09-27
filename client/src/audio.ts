@@ -8,10 +8,17 @@ function ac(): AudioContext | null {
   const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!Ctor) return null;
   if (!ctx) {
-    ctx = new Ctor();
-    master = ctx.createGain();
-    master.gain.value = 0.55;
-    master.connect(ctx.destination);
+    try {
+      const created = new Ctor();
+      const gain = created.createGain();
+      gain.gain.value = 0.55;
+      gain.connect(created.destination);
+      ctx = created;
+      master = gain;
+    } catch {
+      // Audio must never block input: a device/sandbox without audio simply stays silent.
+      return null;
+    }
   }
   return ctx;
 }

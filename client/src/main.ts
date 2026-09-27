@@ -79,6 +79,8 @@ class App {
   private running = true;
   private mode: "none" | "bot" | "wall" | "serve-drill" | "online" = "none";
   private resultShown = false;
+  private quality: "low" | "high" = "high";
+  private qualitySampled = 0;
   private controlEls: { stick: HTMLElement; hitpad: HTMLElement; lob: HTMLElement };
 
   constructor() {
@@ -87,7 +89,9 @@ class App {
     this.prefs = this.loadPrefs();
     this.lang = this.prefs.lang;
     this.t = makeT(this.lang);
-    this.scene = new CourtScene(this.canvas, { quality: "high" });
+    const fx = new URLSearchParams(location.search).get("fx");
+    this.quality = fx === "low" ? "low" : "high";
+    this.scene = new CourtScene(this.canvas, { quality: this.quality });
     const stick = el("div", "stick");
     const knob = el("div", "knob");
     stick.append(knob);
@@ -100,7 +104,7 @@ class App {
     this.controlEls = { stick, hitpad, lob };
     window.addEventListener("resize", () => this.scene.resize());
     document.addEventListener("visibilitychange", () => { this.running = !document.hidden; this.last = performance.now(); });
-    window.addEventListener("pointerdown", () => primeAudio(), { once: true });
+    window.addEventListener("pointerdown", () => { window.setTimeout(() => primeAudio(), 0); }, { once: true });
     this.showHome();
     requestAnimationFrame((t) => this.loop(t));
   }
@@ -772,7 +776,14 @@ class App {
     const dt = Math.min(0.05, Math.max(0, (now - this.last) / 1000));
     this.last = now;
     this.frames++;
-    if (now - this.fpsAt > 1000) { this.fps.value = this.frames * 1000 / (now - this.fpsAt); this.frames = 0; this.fpsAt = now; }
+    if (now - this.fpsAt > 1000) { this.fps.value = this.frames * 1000 / (now - this.fpsAt); this.frames = 0; this.fpsAt = now;
+      // Graceful quality reduction: never let a weak device stay in the heavy path.
+      this.qualitySampled++;
+      if (this.quality === "high" && this.qualitySampled >= 3 && this.fps.value < 40) {
+        this.quality = "low";
+        this.scene.setQuality("low");
+      }
+    }
     if (this.toastTimer > 0) { this.toastTimer -= dt; if (this.toastTimer <= 0 && this.hud) this.hud.meta.classList.remove("on"); }
     if (this.tipTimer > 0) { this.tipTimer -= dt; if (this.tipTimer <= 0 && this.hud) this.hud.tip.classList.remove("on"); }
     let state: RenderState | null = null;
@@ -793,11 +804,12 @@ class App {
   }
 
   /** Exposed for browser verification. */
-  debug(): { fps: number; mode: string; screen: string; ball: unknown; score: unknown; seat: number; code: string; connected: number; players: number } {
+  debug(): { fps: number; mode: string; screen: string; ball: unknown; score: unknown; seat: number; code: string; connected: number; players: number; drill: unknown } {
     const ball = this.sim ? this.sim.state.ball.pos : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.ball.pos : null;
     const score = this.sim ? this.sim.state.score : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.score : null;
     const players: Array<{ connected: boolean }> = this.sim ? this.sim.state.players : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.players : [];
-    return { fps: Math.round(this.fps.value), mode: this.mode, screen: this.screen, ball, score, seat: this.onlineSeat, code: this.onlineCode, connected: players.filter((p) => p.connected).length, players: players.length };
+    const drill = this.drill ? { player: { x: this.drill.state.player.x, y: this.drill.state.player.y }, ball: { x: this.drill.state.ball.x, y: this.drill.state.ball.y, z: this.drill.state.ball.z }, streak: this.drill.state.streak, best: this.drill.state.best } : null;
+    return { fps: Math.round(this.fps.value), mode: this.mode, screen: this.screen, ball, score, seat: this.onlineSeat, code: this.onlineCode, connected: players.filter((p) => p.connected).length, players: players.length, drill };
   }
 
   api(): { startLocal: (o: { singles: boolean }) => void; startDrill: (k: "wall" | "serve") => void; startOnline: (c: string | undefined, create: boolean) => void; showHome: () => void; showRules: () => void; prefs: Prefs; debug: () => unknown } {

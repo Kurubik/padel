@@ -1,0 +1,34 @@
+import { createRequire } from "node:module";
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "/root/.openclaw/workspace/lottoresults/node_modules/playwright");
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const PORT = 19010;
+const BASE = "http://127.0.0.1:" + PORT;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const server = spawn(process.execPath, [join(ROOT, "server/src/index.ts")], { env: { ...process.env, PORT: String(PORT), HOST: "127.0.0.1" }, stdio: "ignore" });
+for (let i = 0; i < 60; i++) { try { const r = await fetch(BASE + "/healthz"); if (r.ok) break; } catch {} await sleep(200); }
+const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage", "--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--mute-audio"] });
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+const page = await ctx.newPage();
+page.setDefaultTimeout(30000);
+await page.goto(BASE, { waitUntil: "load" });
+await sleep(1500);
+await page.getByText("Play vs Bot", { exact: true }).first().click();
+await sleep(400);
+await page.getByText("2 v 2 match", { exact: true }).first().click();
+await sleep(1200);
+const got = page.getByText("Got it");
+if (await got.count()) { await got.first().click(); await sleep(200); }
+const b = await page.locator(".hitpad").first().boundingBox();
+await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+await page.mouse.down();
+await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2 - 30, { steps: 3 });
+await page.mouse.up();
+await sleep(2600);
+await page.screenshot({ path: join(ROOT, "artifacts/rally-390x844.png") });
+console.log("SHOT " + JSON.stringify(await page.evaluate(() => window.padel.debug())));
+await browser.close();
+server.kill("SIGTERM");

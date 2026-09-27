@@ -247,6 +247,7 @@ export class CourtScene {
 
   private buildPlayer(index: number): Rig {
     const group = new THREE.Group();
+    group.userData.index = index;
     const color = index % 2 === 0 ? CORAL : ICE;
     const skin = new THREE.MeshStandardMaterial({ color: 0xe8c8a8, roughness: 0.65 });
     const kit = new THREE.MeshStandardMaterial({ color, roughness: 0.55, emissive: new THREE.Color(color).multiplyScalar(0.12) });
@@ -291,6 +292,8 @@ export class CourtScene {
     ring.position.y = 0.02;
     group.add(ring);
 
+    // Bind the rig to its match index; the renderer looks players up by it.
+    group.userData.index = index;
     this.scene.add(group);
     return { group, torso, arm, racket, ring, player: null };
   }
@@ -328,8 +331,12 @@ export class CourtScene {
 
   setQuality(q: "low" | "high"): void {
     this.quality = q;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === "high" ? 1.85 : 1.25));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === "high" ? 1.85 : 1));
     this.renderer.shadowMap.enabled = q === "high";
+    this.scene.traverse((o: THREE.Object3D) => {
+      const anyO = o as THREE.Mesh;
+      if (anyO.isMesh) anyO.castShadow = q === "high" && anyO.castShadow;
+    });
   }
 
   resize(): void {
@@ -345,20 +352,22 @@ export class CourtScene {
   private frame(): void {
     const portrait = this.aspect < 0.95;
     if (portrait) {
-      this.camera.fov = 54;
-      this.frameTarget.set(0, 9.6, -7.4);
+      // Elevated three-quarter view that keeps the whole court, both baselines
+      // and all four players between the score bar and the touch pads.
+      this.camera.fov = 52;
+      this.frameTarget.set(0, 15.2, -3.2);
     } else {
       this.camera.fov = 46;
-      this.frameTarget.set(0, 12.4, -8.6);
+      this.frameTarget.set(0, 13.6, -7.6);
     }
   }
 
   update(dt: number, state: RenderState | null): void {
     if (this.attract) {
       this.attractT += dt * 0.18;
-      const r = 12.5 + Math.sin(this.attractT * 0.7) * 2.2;
-      this.camera.position.set(Math.sin(this.attractT) * r * 0.55, 7.4 + Math.sin(this.attractT * 0.9) * 0.9, -5.5 + Math.cos(this.attractT) * 1.4);
-      this.lookAt.lerp(new THREE.Vector3(0, 0.8, 9.8), 0.06);
+      const r = 13.5 + Math.sin(this.attractT * 0.7) * 2.2;
+      this.camera.position.set(Math.sin(this.attractT) * r * 0.4, 11.2 + Math.sin(this.attractT * 0.9) * 1.1, -10.5 + Math.cos(this.attractT) * 1.8);
+      this.lookAt.lerp(new THREE.Vector3(0, 0.4, 10), 0.06);
       this.camera.lookAt(this.lookAt);
     } else {
       const desired = this.frameTarget.clone();
@@ -369,7 +378,7 @@ export class CourtScene {
         desired.z += (bz - 9.5) * 0.4;
       }
       this.camera.position.lerp(desired, 1 - Math.pow(0.0016, dt));
-      const look = new THREE.Vector3(0, 0.5, 9.5);
+      const look = new THREE.Vector3(0, 0.2, 9.6);
       if (state) {
         look.x = Math.max(-2, Math.min(2, state.ball.x)) * 0.5;
         look.z = 9.5 + (Math.max(4.5, Math.min(15.5, state.ball.y)) - 9.5) * 0.28;

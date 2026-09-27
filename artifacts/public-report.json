@@ -1,0 +1,36 @@
+{
+  "base": "https://padel.xtr.sh",
+  "steps": [
+    {
+      "step": "public /healthz is ok",
+      "ok": true,
+      "detail": "{\"status\":200,\"body\":{\"ok\":true,\"service\":\"padel-club\",\"protocol\":1,\"rooms\":1,\"players\":0,\"uptimeMs\":62116,\"startedAt\":1790518504485}}"
+    },
+    {
+      "step": "public room code issued over wss",
+      "ok": true,
+      "detail": "393XL"
+    },
+    {
+      "step": "guest joined over the public edge",
+      "ok": true,
+      "detail": "{\"fps\":1,\"mode\":\"online\",\"screen\":\"lobby\",\"ball\":null,\"score\":null,\"seat\":2,\"code\":\"393XL\",\"connected\":0,\"players\":0,\"drill\":null}"
+    },
+    {
+      "step": "match started with 4 seats (2 humans + bots)",
+      "ok": true,
+      "detail": "{\"fps\":5,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"393XL\",\"connected\":2,\"players\":4,\"drill\":null}"
+    },
+    {
+      "step": "a point was decided by the public server",
+      "ok": true,
+      "detail": "{\"fps\":7,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-1.180407048718558,\"y\":7.31116981633745,\"z\":1.2198605928470752},\"score\":{\"points\":[1,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"393XL\",\"connected\":2,\"players\":4,\"drill\":null}"
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "artifacts/public-room-host.png"
+  ],
+  "room": "393XL"
+}

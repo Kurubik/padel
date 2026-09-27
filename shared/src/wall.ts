@@ -170,7 +170,9 @@ export class WallDrill {
       const sp = { x: 2.1, y: COURT.serviceLineHigh + 0.7 };
       s.player.x = sp.x;
       s.player.y = sp.y;
-      this.launch(sp.x, sp.y, 0.55, 2.1, (COURT.serviceLineHigh + 3) / 2 + 0.5);
+      // The target is the diagonal box (across both the net and the centre line).
+      const box = diagonalServeBox(this.team, sp.x);
+      this.launch(sp.x, sp.y, 0.55, (box.xMin + box.xMax) / 2, (box.yMin + box.yMax) / 2 + 0.4);
       return;
     }
     const tx = this.rng.range(-2, 2);

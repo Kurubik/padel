@@ -61,7 +61,7 @@ async function overflowCheck(page, label) {
 async function main() {
   await mkdir(ART, { recursive: true });
   const server = await startServer();
-  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage", "--use-gl=swiftshader", "--enable-unsafe-swiftshader"] });
+  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage", "--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--mute-audio", "--autoplay-policy=no-user-gesture-required", "--disable-audio-output"] });
   try {
     for (const vp of [{ w: 320, h: 640, tag: "320x640" }, { w: 390, h: 844, tag: "390x844" }, { w: 844, h: 390, tag: "landscape" }]) {
       const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 2, hasTouch: true, isMobile: vp.w < 500 });

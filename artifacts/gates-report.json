@@ -1,0 +1,65 @@
+{
+  "steps": [
+    {
+      "step": "wall drill mode runs",
+      "ok": true,
+      "detail": "{\"fps\":15,\"mode\":\"wall\",\"screen\":\"drill\",\"ball\":null,\"score\":null,\"seat\":0,\"code\":\"\",\"connected\":0,\"players\":0}"
+    },
+    {
+      "step": "wall drill counted controlled returns",
+      "ok": false,
+      "detail": "streak=0"
+    },
+    {
+      "step": "room code issued",
+      "ok": true,
+      "detail": "9ECGJ"
+    },
+    {
+      "step": "second client joined the room",
+      "ok": true,
+      "detail": "{\"fps\":1,\"mode\":\"online\",\"screen\":\"lobby\",\"ball\":null,\"score\":null,\"seat\":2,\"code\":\"9ECGJ\",\"connected\":0,\"players\":0}"
+    },
+    {
+      "step": "guest receives authoritative snapshots",
+      "ok": true,
+      "detail": "{\"fps\":3,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":2,\"code\":\"9ECGJ\",\"connected\":2,\"players\":4}"
+    },
+    {
+      "step": "online point decided by the server",
+      "ok": true,
+      "detail": "{\"points\":[1,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null}"
+    },
+    {
+      "step": "reconnect reclaims the same seat",
+      "ok": true,
+      "detail": "before=2 after={\"fps\":1,\"mode\":\"online\",\"screen\":\"lobby\",\"ball\":null,\"score\":null,\"seat\":2,\"code\":\"9ECGJ\",\"connected\":0,\"players\":0}"
+    },
+    {
+      "step": "four distinct human seats",
+      "ok": false,
+      "detail": "[0,2,1,0]"
+    },
+    {
+      "step": "four-human match started",
+      "ok": true,
+      "detail": "{\"fps\":3,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"JKKK9\",\"connected\":4,\"players\":4}"
+    },
+    {
+      "step": "four-player authoritative score moves",
+      "ok": true,
+      "detail": "{\"fps\":4,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":4.786494593682076,\"y\":13.688132584343604,\"z\":0.032},\"score\":{\"points\":[1,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"JKKK9\",\"connected\":4,\"players\":4}"
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "artifacts/wall-390x844.png",
+    "artifacts/room-host-390x844.png",
+    "artifacts/room4-390x844.png"
+  ],
+  "rooms": {
+    "two": "9ECGJ",
+    "four": "JKKK9"
+  }
+}

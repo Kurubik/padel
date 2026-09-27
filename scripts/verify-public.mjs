@@ -17,7 +17,9 @@ const errors = [];
 const log = (s, ok, d) => { report.steps.push({ step: s, ok: !!ok, detail: d }); if (!ok) errors.push(s + ": " + d); };
 
 async function center(page, sel) {
+  await page.waitForSelector(sel, { timeout: 20000 });
   const b = await page.locator(sel).first().boundingBox();
+  if (!b) throw new Error("no box for " + sel);
   return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
 }
 async function tapPad(page, dx = 0, dy = 0) {
@@ -35,7 +37,7 @@ async function holdStick(page, dx, dy, ms) {
 const debug = (page) => page.evaluate(() => (window.padel ? window.padel.debug() : null));
 
 await mkdir(ART, { recursive: true });
-const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage", "--use-gl=swiftshader", "--enable-unsafe-swiftshader"] });
+const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage", "--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--mute-audio", "--autoplay-policy=no-user-gesture-required", "--disable-audio-output"] });
 try {
   const mk = async (tag) => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
@@ -64,18 +66,27 @@ try {
   const db = await debug(b.page);
   log("guest joined over the public edge", !!db && db.code === code && db.seat !== 0, JSON.stringify(db));
   await a.page.getByText("Start match", { exact: true }).first().click();
-  await sleep(2500);
-  const da = await debug(a.page);
-  log("match started with 4 seats (2 humans + bots)", !!da && da.players === 4, JSON.stringify(da));
+  const playing = await (async () => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < 30000) {
+      const d = await debug(a.page);
+      if (d && d.mode === "online" && d.players === 4) return d;
+      await sleep(700);
+    }
+    return null;
+  })();
+  log("match started with 4 seats (2 humans + bots)", !!playing && playing.players === 4, JSON.stringify(playing));
   await tapPad(a.page, 0, -30);
-  for (let i = 0; i < 45; i++) {
-    const p = i % 2 === 0 ? a.page : b.page;
-    await holdStick(p, (i % 4 - 2) * 14, -10, 80);
-    await tapPad(p, 0, -18);
-    await sleep(140);
+  let after = null;
+  const t1 = Date.now();
+  while (Date.now() - t1 < 60000) {
+    const d = await debug(a.page);
+    if (d && d.score && (d.score.points[0] + d.score.points[1] > 0 || d.score.games[0] + d.score.games[1] > 0)) { after = d; break; }
+    await holdStick(a.page, 12, -10, 60);
+    await tapPad(a.page, 0, -16);
+    await sleep(400);
   }
-  const after = await debug(a.page);
-  const scored = !!after && after.score && (after.score.points[0] + after.score.points[1] > 0 || after.score.games[0] + after.score.games[1] > 0);
+  const scored = !!after;
   log("a point was decided by the public server", scored, JSON.stringify(after));
   await a.page.screenshot({ path: join(ART, "public-room-host.png") });
   report.shots.push("artifacts/public-room-host.png");
