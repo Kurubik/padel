@@ -24,6 +24,8 @@ export type SimOptions = {
   difficulty?: [Difficulty, Difficulty];
   /** 1v1 practice format: one player per team instead of a doubles pair. */
   singles?: boolean;
+  /** Seconds the point card holds before the next serve (default 2.4). */
+  pointPause?: number;
 };
 
 const defaultTeams = (): [TeamMeta, TeamMeta] => [
@@ -41,6 +43,7 @@ function freshBounce() {
  * exactly this class, so the rules are identical online and offline.
  */
 export class Sim {
+  private readonly pointPause: number;
   state: MatchState;
   readonly rng: Rng;
   readonly botRng: Rng;
@@ -54,6 +57,7 @@ export class Sim {
   constructor(opts: SimOptions = {}) {
     const config = opts.config ?? { ...SHORT_FORMAT };
     const teams = opts.teams ?? defaultTeams();
+    this.pointPause = opts.pointPause ?? POINT_PAUSE;
     const perTeam = opts.singles ? 1 : 2;
     const botsDefault = opts.bots ?? [false, false, false, false].slice(0, perTeam * 2);
     const difficulty = opts.difficulty ?? ["pro", "pro"];
@@ -564,7 +568,7 @@ export class Sim {
     s.pointReason = reason;
     s.ball.live = false;
     s.phase = "point";
-    s.pauseTimer = POINT_PAUSE;
+    s.pauseTimer = this.pointPause;
     s.cueThisRally = false;
     const gamesChanged = s.score.games[0] !== gamesBefore[0] || s.score.games[1] !== gamesBefore[1];
     if (gamesChanged) {

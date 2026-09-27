@@ -4,27 +4,27 @@
     {
       "step": "public /healthz is ok",
       "ok": true,
-      "detail": "{\"status\":200,\"body\":{\"ok\":true,\"service\":\"padel-club\",\"protocol\":1,\"rooms\":1,\"players\":0,\"uptimeMs\":62116,\"startedAt\":1790518504485}}"
+      "detail": "{\"status\":200,\"body\":{\"ok\":true,\"service\":\"padel-club\",\"protocol\":1,\"rooms\":0,\"players\":0,\"uptimeMs\":159685,\"startedAt\":1790521835455}}"
     },
     {
       "step": "public room code issued over wss",
       "ok": true,
-      "detail": "393XL"
+      "detail": "VEFKT"
     },
     {
       "step": "guest joined over the public edge",
-      "ok": true,
-      "detail": "{\"fps\":1,\"mode\":\"online\",\"screen\":\"lobby\",\"ball\":null,\"score\":null,\"seat\":2,\"code\":\"393XL\",\"connected\":0,\"players\":0,\"drill\":null}"
+      "ok": false,
+      "detail": "{\"fps\":0,\"mode\":\"online\",\"screen\":\"lobby\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"\",\"connected\":0,\"players\":0,\"drill\":null,\"layout\":{\"w\":390,\"h\":844,\"padsTop\":0,\"scoreBottom\":0,\"chipBRight\":0,\"topRightLeft\":0,\"player\":null,\"playerVisible\":false,\"hudClear\":false},\"basis\":{\"right\":{\"x\":-0.9999917732648484,\"y\":-0.004056279406485913},\"fwd\":{\"x\":-0.004056279406485914,\"y\":0.9999917732648486}},\"teams\":[],\"demo\":{\"players\":4,\"phase\":\"serve\"},\"camera\":{\"pos\":{\"x\":0.06,\"y\":5.61,\"z\":-4.2},\"dir\":{\"x\":-0.004,\"y\":-0.338,\"z\":0.941},\"look\":{\"x\":0,\"y\":0.12,\"z\":11.09},\"home\":{\"x\":0,\"y\":29.25,\"z\":-20.91},\"fov\":52,\"aspect\":0.462,\"band\":{\"far\":0.16,\"near\":0.72},\"near\":{\"x\":201.65222797976298,\"y\":992.6899398492441,\"visible\":true},\"mid\":{\"x\":195.25000851303844,\"y\":449.05002605553943,\"visible\":true},\"far\":{\"x\":193.7320983021705,\"y\":320.1577597919755,\"visible\":true},\"canvas\":{\"w\":390,\"h\":844}}}"
     },
     {
       "step": "match started with 4 seats (2 humans + bots)",
       "ok": true,
-      "detail": "{\"fps\":5,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"393XL\",\"connected\":2,\"players\":4,\"drill\":null}"
+      "detail": "{\"fps\":4,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"VEFKT\",\"connected\":2,\"players\":4,\"drill\":null,\"layout\":{\"w\":390,\"h\":844,\"padsTop\":680,\"scoreBottom\":56,\"chipBRight\":270,\"topRightLeft\":278,\"player\":{\"x\":238,\"y\":548},\"playerVisible\":true,\"hudClear\":true},\"basis\":{\"right\":{\"x\":-0.9999838084129729,\"y\":-0.005690598552612994},\"fwd\":{\"x\":-0.005690598552612994,\"y\":0.9999838084129727}},\"teams\":[{\"seat\":0,\"team\":0,\"bot\":false},{\"seat\":1,\"team\":0,\"bot\":true},{\"seat\":2,\"team\":1,\"bot\":false},{\"seat\":3,\"team\":1,\"bot\":true}],\"demo\":{\"players\":4,\"phase\":\"serve\"},\"camera\":{\"pos\":{\"x\":0,\"y\":29.25,\"z\":-20.91},\"dir\":{\"x\":-0.004,\"y\":-0.626,\"z\":0.779},\"look\":{\"x\":-0.21,\"y\":0,\"z\":15.48},\"home\":{\"x\":0,\"y\":29.25,\"z\":-20.91},\"fov\":52,\"aspect\":0.462,\"band\":{\"far\":0.3,\"near\":0.7886367002369669},\"near\":{\"x\":192.02620909481573,\"y\":664.3809084918179,\"visible\":true},\"mid\":{\"x\":191.41187296237788,\"y\":492.0538144158331,\"visible\":true},\"far\":{\"x\":190.98827208426005,\"y\":373.22976269611695,\"visible\":true},\"canvas\":{\"w\":390,\"h\":844}}}"
     },
     {
       "step": "a point was decided by the public server",
       "ok": true,
-      "detail": "{\"fps\":7,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-1.180407048718558,\"y\":7.31116981633745,\"z\":1.2198605928470752},\"score\":{\"points\":[1,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"393XL\",\"connected\":2,\"players\":4,\"drill\":null}"
+      "detail": "{\"fps\":7,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-0.9498510695978184,\"y\":7.562185917307627,\"z\":1.3250565259447395},\"score\":{\"points\":[1,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"VEFKT\",\"connected\":2,\"players\":4,\"drill\":null,\"layout\":{\"w\":390,\"h\":844,\"padsTop\":680,\"scoreBottom\":56,\"chipBRight\":270,\"topRightLeft\":278,\"player\":{\"x\":228,\"y\":543},\"playerVisible\":true,\"hudClear\":true},\"basis\":{\"right\":{\"x\":-0.9997553837777631,\"y\":-0.022117246830871906},\"fwd\":{\"x\":-0.022117246830871903,\"y\":0.9997553837777631}},\"teams\":[{\"seat\":0,\"team\":0,\"bot\":false},{\"seat\":1,\"team\":0,\"bot\":true},{\"seat\":2,\"team\":1,\"bot\":false},{\"seat\":3,\"team\":1,\"bot\":true}],\"demo\":{\"players\":4,\"phase\":\"serve\"},\"camera\":{\"pos\":{\"x\":0,\"y\":29.25,\"z\":-20.91},\"dir\":{\"x\":-0.017,\"y\":-0.629,\"z\":0.777},\"look\":{\"x\":-0.8,\"y\":0,\"z\":15.2},\"home\":{\"x\":0,\"y\":29.25,\"z\":-20.91},\"fov\":52,\"aspect\":0.462,\"band\":{\"far\":0.3,\"near\":0.7886367002369669},\"near\":{\"x\":183.45268031266505,\"y\":661.0175562805948,\"visible\":true},\"mid\":{\"x\":181.05657565269954,\"y\":488.9176986163039,\"visible\":true},\"far\":{\"x\":179.40227004348648,\"y\":370.0974464646717,\"visible\":true},\"canvas\":{\"w\":390,\"h\":844}}}"
     }
   ],
   "consoleErrors": [],
@@ -32,5 +32,5 @@
   "shots": [
     "artifacts/public-room-host.png"
   ],
-  "room": "393XL"
+  "room": "VEFKT"
 }

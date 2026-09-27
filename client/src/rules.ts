@@ -47,9 +47,12 @@ export const LESSON_ART: Record<string, string> = {
     <circle cx="196" cy="60" r="6" fill="#ff5b4d"/>
     <path d="M196 60 L236 40" stroke="#ff5b4d" stroke-width="2.5" stroke-dasharray="5 4"/>
     <text x="160" y="192" fill="#93a3c8" font-size="13" text-anchor="middle" font-family="Inter, sans-serif">two bounces · wall first</text>`),
-  "rules.7": svg(`${courtOutline}${dot(130, 84, "#ff5b4d")}${dot(190, 140, "#ff5b4d")}
-    <path d="M190 140 L172 116" stroke="#d9ff2f" stroke-width="2.5" stroke-dasharray="6 5"/>
-    <text x="160" y="192" fill="#93a3c8" font-size="13" text-anchor="middle" font-family="Inter, sans-serif">one up · one back</text>`),
+  "rules.7": svg(`${courtOutline}${dot(118, 122, "#ff5b4d")}${dot(196, 122, "#ff5b4d")}
+    <path d="M100 140 L100 108" stroke="#d9ff2f" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arw)"/>
+    <path d="M214 140 L214 108" stroke="#d9ff2f" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arw)"/>
+    <path d="M96 152 L214 152" stroke="#d9ff2f" stroke-width="2.5" stroke-dasharray="7 5"/>
+    <defs><marker id="arw" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#d9ff2f"/></marker></defs>
+    <text x="160" y="186" fill="#93a3c8" font-size="12" text-anchor="middle" font-family="Inter, sans-serif">shift and cover as a pair</text>`),
 };
 
 export const LESSON_KEYS: Array<{ title: Key; body: Key; art: string }> = [

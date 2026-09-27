@@ -3,6 +3,11 @@ import { Sim, SHORT_FORMAT, FULL_FORMAT, makeRoomCode, ROOM_IDLE_MS, RECONNECT_G
 import type { ClientMessage, Difficulty, MatchConfig, PlayerInput, SeatInfo, ServerMessage, ShotType } from "@padel/shared";
 
 const SEAT_ORDER = [0, 2, 1, 3] as const;
+
+/** Seats 0/1 form team 0 and seats 2/3 form team 1 — the same split the Sim uses. */
+export function teamOfSeat(seat: number): 0 | 1 {
+  return (seat < 2 ? 0 : 1) as 0 | 1;
+}
 const MAX_MSGS_PER_SEC = 120;
 const SHOT_TYPES: ShotType[] = ["drive", "lob", "volley", "smash"];
 
@@ -76,8 +81,14 @@ export class Room {
 
   seatsInfo(): SeatInfo[] {
     return this.seats
-      .filter((s) => !s.bot || s.connected || s.name)
-      .map((s) => ({ seat: s.seat, name: s.name || `Bot ${s.seat + 1}`, team: (s.seat % 2) as 0 | 1, bot: s.bot, connected: s.connected, difficulty: s.difficulty }))
+      .map((s) => ({
+        seat: s.seat,
+        name: s.name || (s.bot ? `Bot ${s.seat + 1}` : ""),
+        team: teamOfSeat(s.seat),
+        bot: s.bot,
+        connected: s.connected,
+        difficulty: s.difficulty,
+      }))
       .sort((a, b) => a.seat - b.seat);
   }
 
@@ -86,9 +97,7 @@ export class Room {
   }
 
   private broadcastSeats(): void {
-    const players: SeatInfo[] = this.seats
-      .map((s) => ({ seat: s.seat, name: s.name || (s.bot ? `Bot ${s.seat + 1}` : ""), team: (s.seat % 2) as 0 | 1, bot: s.bot, connected: s.connected, difficulty: s.difficulty }))
-      .sort((a, b) => a.seat - b.seat);
+    const players: SeatInfo[] = this.seatsInfo();
     this.hooks.broadcast({ t: "room", code: this.code, players, hostSeat: this.hostSeat, started: this.started });
   }
 

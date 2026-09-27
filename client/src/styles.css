@@ -128,11 +128,15 @@ button {
 
 .scorebar {
   position: absolute; top: var(--pad-t); left: var(--pad); right: var(--pad-r);
-  display: flex; gap: 8px; align-items: stretch; justify-content: center;
+  display: flex; gap: 8px; align-items: flex-start;
 }
+.chipgroup {
+  display: flex; gap: 8px; flex: 1 1 auto; justify-content: center; min-width: 0; align-items: stretch;
+}
+.chipgroup > .chip { min-width: 0; }
 .chip {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px; border-radius: 14px;
+  display: flex; align-items: center; gap: 8px; flex: 0 1 auto;
+  padding: 8px 11px; border-radius: 14px;
   background: rgba(8, 14, 30, 0.72); border: 1px solid var(--stroke);
   backdrop-filter: blur(8px); box-shadow: var(--shadow);
 }
@@ -152,7 +156,7 @@ button {
   background: rgba(8, 14, 30, 0.72); border: 1px solid var(--stroke); backdrop-filter: blur(8px);
 }
 .iconbtn[aria-pressed="true"] { color: var(--ball); border-color: rgba(217,255,47,0.5); }
-.topright { position: absolute; top: var(--pad-t); right: var(--pad-r); display: flex; gap: 8px; }
+.topright { display: flex; gap: 8px; flex: 0 0 auto; }
 
 .banner {
   position: absolute; top: calc(var(--pad-t) + 66px); left: 50%; transform: translateX(-50%);
@@ -267,8 +271,28 @@ button {
 
 .stat { display: flex; gap: 10px; }
 .stat .cell { flex: 1; padding: 12px; border-radius: 14px; background: rgba(8,14,30,0.7); border: 1px solid var(--stroke); text-align: center; }
+.tag.team-a { border-color: rgba(255, 91, 77, 0.55); background: rgba(255, 91, 77, 0.14); color: #ffc4be; }
+.tag.team-b { border-color: rgba(90, 160, 255, 0.55); background: rgba(90, 160, 255, 0.14); color: #bfd8ff; }
+
 .stat .cell b { display: block; font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .stat .cell span { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+.hitpad.ready {
+  border-color: rgba(217, 255, 47, 0.95);
+  background: radial-gradient(circle at 50% 40%, rgba(217, 255, 47, 0.4), rgba(8, 14, 30, 0.55));
+  box-shadow: 0 0 0 6px rgba(217, 255, 47, 0.12), 0 0 34px rgba(217, 255, 47, 0.35);
+}
+.hitpad.ready .label { color: #f4ffb0; }
+
+/* narrow phones: shrink chrome so the score and controls always fit */
+@media (max-width: 380px) {
+  .chip { padding: 6px 8px; gap: 6px; border-radius: 12px; }
+  .chip .name { font-size: 9px; letter-spacing: 0.06em; }
+  .chip .pts { font-size: 17px; min-width: 18px; }
+  .chip .games { font-size: 11px; }
+  .iconbtn { width: 38px; height: 38px; border-radius: 10px; font-size: 12px; }
+  .topright { gap: 6px; }
+}
 
 /* landscape phones: keep controls low and wide */
 @media (orientation: landscape) and (max-height: 560px) {

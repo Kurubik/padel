@@ -21,6 +21,16 @@ function playUntilHit(drill: WallDrill, maxSteps = 1200): boolean {
   return false;
 }
 
+test("the wall drill feed arrives within a comfortable reach of the player", () => {
+  const drill = new WallDrill("wall", 13);
+  let sawCue = false;
+  for (let i = 0; i < 600; i++) {
+    drill.update({ x: 0, y: 0 }, undefined, 1 / 60);
+    if (drill.state.canHit) sawCue = true;
+  }
+  assert.equal(sawCue, true, "standing still must still be enough to be offered a contact");
+});
+
 test("wall practice counts a controlled return when the ball is played", () => {
   const drill = new WallDrill("wall", 11);
   assert.equal(drill.state.streak, 0);

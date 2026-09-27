@@ -77,6 +77,23 @@ test("inputs are clamped and the server scores points authoritatively", () => {
   assert.equal(point!.team, 0, "the serving team wins when the return is never played");
 });
 
+test("lobby teams match the simulation teams (seats 0/1 -> 0, seats 2/3 -> 1)", () => {
+  const { room } = makeRoom();
+  ["A", "B", "C", "D"].forEach((n) => room.join(n));
+  const info = room.seatsInfo();
+  assert.deepEqual(info.map((s) => s.seat), [0, 1, 2, 3]);
+  assert.deepEqual(info.map((s) => s.team), [0, 0, 1, 1], "lobby teams must follow the pair split the Sim uses");
+  for (const s of info) {
+    const simPlayer = room.sim.state.players.find((p) => p.index === s.seat);
+    assert.ok(simPlayer, "seat " + s.seat + " exists in the simulation");
+    assert.equal(s.team, simPlayer!.team, "lobby team for seat " + s.seat + " must equal the simulation team");
+  }
+  // And the broadcast carries the same mapping.
+  const broadcast = room.seatsInfo();
+  assert.deepEqual(broadcast.filter((s) => s.seat < 2).map((s) => s.team), [0, 0]);
+  assert.deepEqual(broadcast.filter((s) => s.seat >= 2).map((s) => s.team), [1, 1]);
+});
+
 test("idle and empty rooms are reclaimable", () => {
   const { room } = makeRoom();
   assert.equal(room.isEmpty(), true);

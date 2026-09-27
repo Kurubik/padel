@@ -66,7 +66,7 @@ export class CourtScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.quality === "high" ? 1.85 : 1.25));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
+    this.renderer.toneMappingExposure = 1.32;
     if (this.quality === "high") {
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -121,8 +121,8 @@ export class CourtScene {
   }
 
   private buildLights(): void {
-    this.scene.add(new THREE.HemisphereLight(0x9dc0ff, 0x0a1122, 0.9));
-    const key = new THREE.DirectionalLight(0xdfeaff, 1.25);
+    this.scene.add(new THREE.HemisphereLight(0x9dc0ff, 0x0a1122, 1.05));
+    const key = new THREE.DirectionalLight(0xdfeaff, 1.4);
     key.position.set(-9, 17, -6);
     if (this.quality === "high") {
       key.castShadow = true;
@@ -140,7 +140,7 @@ export class CourtScene {
     rimA.position.set(-13, 15, 4);
     rimA.target.position.set(0, 0, 9);
     this.scene.add(rimA, rimA.target);
-    const rimB = new THREE.SpotLight(0xff7a5c, 16, 46, Math.PI / 4.6, 0.6, 1.8);
+    const rimB = new THREE.SpotLight(0xff7a5c, 22, 46, Math.PI / 4.6, 0.6, 1.8);
     rimB.position.set(14, 14, 14);
     rimB.target.position.set(0, 0, 9);
     this.scene.add(rimB, rimB.target);
@@ -298,8 +298,33 @@ export class CourtScene {
     return { group, torso, arm, racket, ring, player: null };
   }
 
+  /** Diagnostics for the browser gates: where the camera sits and where the court projects. */
+  cameraInfo(): unknown {
+    const p = this.camera.position;
+    const dirV = new THREE.Vector3();
+    this.camera.getWorldDirection(dirV);
+    return {
+      pos: { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(2) },
+      dir: { x: +dirV.x.toFixed(3), y: +dirV.y.toFixed(3), z: +dirV.z.toFixed(3) },
+      look: { x: +this.lookAt.x.toFixed(2), y: +this.lookAt.y.toFixed(2), z: +this.lookAt.z.toFixed(2) },
+      home: { x: +this.homePos.x.toFixed(2), y: +this.homePos.y.toFixed(2), z: +this.homePos.z.toFixed(2) },
+      fov: this.camera.fov,
+      aspect: +this.camera.aspect.toFixed(3),
+      band: { ...this.band },
+      near: this.project(0, 0, 0),
+      mid: this.project(0, 10, 0),
+      far: this.project(0, 20, 0),
+      canvas: { w: this.renderer.domElement.clientWidth, h: this.renderer.domElement.clientHeight },
+    };
+  }
+
   /** Screen-space point (CSS px) for a court position — used by DOM markers if needed. */
   project(x: number, y: number, z: number): { x: number; y: number; visible: boolean } {
+    // Keep the camera matrices current: three only refreshes them inside render(),
+    // so a projection between frames (HUD layout checks, DOM markers) could
+    // otherwise use a stale pose.
+    this.camera.updateMatrixWorld();
+    this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
     const v = new THREE.Vector3(...toThree(x, y, z)).project(this.camera);
     const rect = this.renderer.domElement.getBoundingClientRect();
     return { x: (v.x * 0.5 + 0.5) * rect.width, y: (-v.y * 0.5 + 0.5) * rect.height, visible: v.z < 1 };
@@ -349,39 +374,108 @@ export class CourtScene {
     this.camera.updateProjectionMatrix();
   }
 
-  private frame(): void {
+  /** Vertical band (viewport-height fractions) the court must be framed inside. */
+  private band = { far: 0.16, near: 0.72 };
+  private safe = { far: 0.16, near: 0.72 };
+  private homePos = new THREE.Vector3(0, 17, -2);
+  private homeLook = new THREE.Vector3(0, 0, 8);
+
+  /**
+   * Adopt the safe band the UI reports (score bar bottom -> touch pads top) and
+   * solve the camera for it. With the camera on a ground ray behind the near
+   * baseline, the distance and pitch are chosen so the near baseline lands at
+   * `near` and the far baseline at `far`; the whole court and the local player
+   * therefore stay between the HUD and the controls at any viewport, instead of
+   * relying on hand-tuned numbers per screen size.
+   */
+  setBand(far: number, near: number): void {
+    // The UI reports the safe limits; the composition band stays inside them.
+    const safeFar = Math.min(Math.max(far, 0.06), 0.42);
+    const safeNear = Math.min(Math.max(near, safeFar + 0.14), 0.9);
+    this.safe = { far: safeFar, near: safeNear };
     const portrait = this.aspect < 0.95;
-    if (portrait) {
-      // Elevated three-quarter view that keeps the whole court, both baselines
-      // and all four players between the score bar and the touch pads.
-      this.camera.fov = 52;
-      this.frameTarget.set(0, 15.2, -3.2);
-    } else {
-      this.camera.fov = 46;
-      this.frameTarget.set(0, 13.6, -7.6);
+    // Aim the court at a pleasing band; pure "fit above the pads" would push the
+    // camera so far back that the court flattens into a strip.
+    const wantFar = portrait ? Math.max(safeFar, 0.30) : Math.max(safeFar, 0.18);
+    const wantNear = portrait ? Math.min(safeNear, 0.86) : Math.min(safeNear, 0.62);
+    this.band = { far: wantFar, near: Math.max(wantNear, wantFar + 0.16) };
+    this.fitCourt();
+  }
+
+  private fitCourt(): void {
+    const w = this.renderer.domElement.clientWidth || window.innerWidth || 400;
+    const h = this.renderer.domElement.clientHeight || window.innerHeight || 800;
+    const aspect = w / h;
+    const fov = aspect < 0.95 ? 52 : 46;
+    const T = Math.tan((fov * Math.PI) / 360);
+    const fN = this.band.near;
+    const fF = this.band.far;
+    const A = (fN - 0.5) * 2 * T;
+    const hT = T * aspect;
+    // The near corners may crop into the touch-pad zone, so fit most (not all) of
+    // the court width; that buys a closer, more dramatic camera and a visible
+    // far wall instead of a flat, distant view.
+    const widthFit = aspect < 0.95 ? 0.82 : 0.95;
+    const minXN = (COURT.halfWidth * widthFit + 0.5) / hT;
+    const zc = -(minXN + 0.5);
+    const xN = -zc;
+    const xF = COURT.length - zc;
+    const heightFor = (theta: number): number => xN * Math.tan(theta + Math.atan(A));
+    const farFrac = (theta: number): number => {
+      const H = heightFor(theta);
+      return 0.5 + 0.5 * (Math.tan(Math.atan(H / xF) - theta) / T);
+    };
+    // Coarse scan then ternary refine: robust even if the curve is not monotone.
+    let best = 0.6;
+    let bestErr = Infinity;
+    for (let i = 0; i <= 240; i++) {
+      const theta = 0.06 + (i / 240) * 1.3;
+      const err = Math.abs(farFrac(theta) - fF);
+      if (err < bestErr) { bestErr = err; best = theta; }
     }
+    let lo = Math.max(0.05, best - 0.03);
+    let hi = best + 0.03;
+    for (let i = 0; i < 44; i++) {
+      const m1 = lo + (hi - lo) / 3;
+      const m2 = hi - (hi - lo) / 3;
+      if (Math.abs(farFrac(m1) - fF) < Math.abs(farFrac(m2) - fF)) hi = m2; else lo = m1;
+    }
+    const theta = (lo + hi) / 2;
+    const H = heightFor(theta);
+    const aimX = H / Math.tan(theta);
+    this.aspect = aspect;
+    this.camera.aspect = aspect;
+    this.camera.fov = fov;
+    this.camera.updateProjectionMatrix();
+    this.homePos.set(0, H, zc);
+    this.homeLook.set(0, 0, zc + aimX);
+    this.frameTarget.copy(this.homePos);
+    this.lookAt.copy(this.homeLook);
+    this.camera.position.copy(this.homePos);
+    this.camera.lookAt(this.homeLook);
+  }
+
+  private frame(): void {
+    this.fitCourt();
   }
 
   update(dt: number, state: RenderState | null): void {
     if (this.attract) {
       this.attractT += dt * 0.18;
-      const r = 13.5 + Math.sin(this.attractT * 0.7) * 2.2;
-      this.camera.position.set(Math.sin(this.attractT) * r * 0.4, 11.2 + Math.sin(this.attractT * 0.9) * 1.1, -10.5 + Math.cos(this.attractT) * 1.8);
-      this.lookAt.lerp(new THREE.Vector3(0, 0.4, 10), 0.06);
+      // Slow hero drift just above the net line: the court, glass and mesh read
+      // clearly and the bot rally stays visible without stealing attention.
+      const r = 8.6 + Math.sin(this.attractT * 0.6) * 1.2;
+      this.camera.position.set(Math.sin(this.attractT) * r * 0.4, 5.6 + Math.sin(this.attractT * 0.8) * 0.6, -5.4 + Math.cos(this.attractT) * 1.2);
+      this.lookAt.lerp(new THREE.Vector3(0, 1.0, 10.2), 0.06);
       this.camera.lookAt(this.lookAt);
     } else {
-      const desired = this.frameTarget.clone();
+      // Ceiling-safe follow: the camera keeps the solved position and only the
+      // aim drifts slightly, so the framed court band never leaves the safe area.
+      this.camera.position.lerp(this.homePos, 1 - Math.pow(0.0016, dt));
+      const look = this.homeLook.clone();
       if (state) {
-        const bx = Math.max(-2.4, Math.min(2.4, state.ball.x));
-        const bz = Math.max(4.5, Math.min(15.5, state.ball.y));
-        desired.x += bx * 0.45;
-        desired.z += (bz - 9.5) * 0.4;
-      }
-      this.camera.position.lerp(desired, 1 - Math.pow(0.0016, dt));
-      const look = new THREE.Vector3(0, 0.2, 9.6);
-      if (state) {
-        look.x = Math.max(-2, Math.min(2, state.ball.x)) * 0.5;
-        look.z = 9.5 + (Math.max(4.5, Math.min(15.5, state.ball.y)) - 9.5) * 0.28;
+        look.x = Math.max(-2, Math.min(2, state.ball.x)) * 0.4;
+        look.z = this.homeLook.z + Math.max(-4.5, Math.min(4.5, state.ball.y - 9.5)) * 0.12;
       }
       this.lookAt.lerp(look, 1 - Math.pow(0.0025, dt));
       this.camera.lookAt(this.lookAt);

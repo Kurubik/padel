@@ -43,7 +43,7 @@ type Prefs = { lang: Lang; sound: boolean; assist: boolean; difficulty: Difficul
 type HudRefs = {
   scoreA: HTMLElement; scoreB: HTMLElement; gamesA: HTMLElement; gamesB: HTMLElement;
   chipA: HTMLElement; chipB: HTMLElement; banner: HTMLElement; tip: HTMLElement;
-  reason: HTMLElement; meta: HTMLElement;
+  reason: HTMLElement; meta: HTMLElement; scoreBar: HTMLElement; topRight: HTMLElement;
 };
 
 class App {
@@ -79,6 +79,7 @@ class App {
   private running = true;
   private mode: "none" | "bot" | "wall" | "serve-drill" | "online" = "none";
   private resultShown = false;
+  private demo: Sim | null = null;
   private quality: "low" | "high" = "high";
   private qualitySampled = 0;
   private controlEls: { stick: HTMLElement; hitpad: HTMLElement; lob: HTMLElement };
@@ -102,7 +103,7 @@ class App {
     const lob = el("div", "lob", "<b>UP</b>LOB");
     this.controls = new Controls({ stick, knob, hitpad, aim, lob, basis: () => this.cameraBasis() });
     this.controlEls = { stick, hitpad, lob };
-    window.addEventListener("resize", () => this.scene.resize());
+    window.addEventListener("resize", () => { this.scene.resize(); this.applyBand(); });
     document.addEventListener("visibilitychange", () => { this.running = !document.hidden; this.last = performance.now(); });
     window.addEventListener("pointerdown", () => { window.setTimeout(() => primeAudio(), 0); }, { once: true });
     this.showHome();
@@ -142,6 +143,7 @@ class App {
     this.mode = "none";
     this.sim = null;
     this.drill = null;
+    this.startAttractDemo();
     this.scene.setAttract(true);
     this.clearUi();
     this.screen = "home";
@@ -253,6 +255,7 @@ class App {
   private showRules(): void {
     this.clearUi();
     this.screen = "rules";
+    this.startAttractDemo();
     this.scene.setAttract(true);
     const wrap = el("div", "screen");
     const head = el("div");
@@ -279,6 +282,7 @@ class App {
     this.clearUi();
     const hud = el("div", "hud");
     const scorebar = el("div", "scorebar");
+    const chipgroup = el("div", "chipgroup");
     const chipA = el("div", "chip a");
     const chipB = el("div", "chip b");
     const scoreA = el("div", "pts", "0");
@@ -287,7 +291,8 @@ class App {
     const gamesB = el("div", "games", "0");
     chipA.append(el("div", "dot"), el("div", "name", this.t("hud.teamA")), scoreA, gamesA);
     chipB.append(el("div", "dot"), el("div", "name", this.t("hud.teamB")), scoreB, gamesB);
-    scorebar.append(chipA, chipB);
+    chipgroup.append(chipA, chipB);
+    scorebar.append(chipgroup);
     const topright = el("div", "topright");
     const soundBtn = el("button", "iconbtn", this.prefs.sound ? "SND" : "MUTE");
     soundBtn.setAttribute("aria-label", this.t("menu.sound"));
@@ -301,17 +306,34 @@ class App {
     pause.setAttribute("aria-label", this.t("hud.pause"));
     pause.onclick = () => this.showPause();
     topright.append(soundBtn, pause);
+    scorebar.append(topright);
     const banner = el("div", "banner");
     const tip = el("div", "tip");
     const reason = el("div", "reason");
     const pads = el("div", "pads");
     pads.append(this.controlEls.stick, this.controlEls.lob, this.controlEls.hitpad);
     const meta = el("div", "toast");
-    hud.append(scorebar, topright, banner, tip, reason, pads, meta);
+    hud.append(scorebar, banner, tip, reason, pads, meta);
     this.ui.append(hud);
-    this.hud = { scoreA, scoreB, gamesA, gamesB, chipA, chipB, banner, tip, reason, meta };
+    this.hud = { scoreA, scoreB, gamesA, gamesB, chipA, chipB, banner, tip, reason, meta, scoreBar: scorebar, topRight: topright };
     this.lastHudKey = "";
     this.measure();
+    this.applyBand();
+  }
+
+  /**
+   * Hand the renderer the safe band between the score bar and the touch pads,
+   * then let it solve the camera for that band.
+   */
+  private applyBand(): void {
+    const h = window.innerHeight || 1;
+    const stick = this.controlEls.stick.getBoundingClientRect();
+    const pad = this.controlEls.hitpad.getBoundingClientRect();
+    const padTop = Math.min(stick.top || h, pad.top || h);
+    const bar = this.hud ? this.hud.scoreBar.getBoundingClientRect() : null;
+    const near = (padTop - 14) / h;
+    const far = ((bar ? bar.bottom : 56) + 12) / h;
+    this.scene.setBand(far, near);
   }
 
   private measure(): void {
@@ -323,6 +345,7 @@ class App {
 
   private startLocal(opts: { singles: boolean }): void {
     primeAudio();
+    this.demo = null;
     this.mode = "bot";
     this.humanIndex = 0;
     const config: MatchConfig = this.prefs.version === "full" ? { ...FULL_FORMAT, assist: this.prefs.assist } : { ...SHORT_FORMAT, assist: this.prefs.assist };
@@ -342,6 +365,7 @@ class App {
 
   private startDrill(kind: "wall" | "serve"): void {
     primeAudio();
+    this.demo = null;
     this.mode = kind === "wall" ? "wall" : "serve-drill";
     this.drill = new WallDrill(kind, (Date.now() & 0xffff) >>> 0);
     this.buildHud();
@@ -351,6 +375,7 @@ class App {
 
   private startOnline(code: string | undefined, create: boolean): void {
     primeAudio();
+    this.demo = null;
     this.mode = "online";
     this.snaps = [];
     this.onlineStarted = false;
@@ -405,11 +430,44 @@ class App {
     } catch { return "Player"; }
   }
 
+  /** Mirrors the server and the Sim: seats 0/1 are team 0, seats 2/3 are team 1. */
+  /** A bot-vs-bot rally keeps the night court alive behind the menus. */
+  private startAttractDemo(): void {
+    if (this.mode !== "none" && this.screen !== "lobby" && this.screen !== "rules") return;
+    this.demo = new Sim({
+      seed: (Date.now() ^ 0x9e3779b9) >>> 0,
+      config: { ...SHORT_FORMAT },
+      bots: [true, true, true, true],
+      difficulty: ["pro", "rookie"],
+      pointPause: 0.7,
+    });
+  }
+
+  private demoRenderState(): RenderState | null {
+    const sim = this.demo;
+    if (!sim) return null;
+    const b = sim.state.ball;
+    return {
+      ball: { x: b.pos.x, y: b.pos.y, z: b.pos.z },
+      players: sim.state.players.map((p) => ({ index: p.index, team: p.team, pos: { ...p.pos }, facing: p.facing, swing: p.swing, bot: p.bot, connected: p.connected })),
+      serverIndex: sim.state.server,
+      serveNumber: sim.state.serveNumber,
+      phase: sim.state.phase,
+      landing: null,
+    };
+  }
+
+  /** The team split exactly as the lobby displays it, so gates can verify it. */
+  private lobbyTeams(): Array<{ seat: number; team: 0 | 1; name: string }> {
+    return this.onlinePlayers.map((p) => ({ seat: p.seat, team: p.team, name: p.name }));
+  }
+
   private teamOfSeat(seat: number): 0 | 1 {
-    return (seat % 2) as 0 | 1;
+    return (seat < 2 ? 0 : 1) as 0 | 1;
   }
 
   private showLobby(): void {
+    this.startAttractDemo();
     const existing = this.ui.querySelector(".lobby-panel");
     const fresh = this.screen !== "lobby" || !(existing instanceof HTMLElement);
     this.screen = "lobby";
@@ -439,8 +497,9 @@ class App {
     }
     const list = el("div", "pillrow");
     for (const p of this.onlinePlayers) {
-      const name = (p.name || "Seat " + (p.seat + 1)) + (p.connected ? "" : " (offline)");
-      list.append(el("span", p.bot ? "tag" : "tag good", name));
+      const role = p.team === 0 ? this.t("hud.teamA") : this.t("hud.teamB");
+      const name = (p.name || "Seat " + (p.seat + 1)) + (p.connected ? "" : " (offline)") + " · " + role;
+      list.append(el("span", (p.bot ? "tag" : "tag good") + (p.team === 0 ? " team-a" : " team-b"), name));
     }
     panel.append(list);
     panel.append(el("p", undefined, this.onlineStarted ? this.t("hud.connected") : this.t("hud.waiting")));
@@ -568,6 +627,7 @@ class App {
     }
     const events = drill.update(read.move, hit, dt);
     this.handleEvents(events, 0);
+    this.controlEls.hitpad.classList.toggle("ready", drill.state.canHit && !hit);
     if (this.hud) {
       const s = drill.state;
       this.hud.scoreA.textContent = String(s.streak);
@@ -797,6 +857,13 @@ class App {
     } else if (this.mode === "online") {
       this.stepOnline();
       state = this.onlineRenderState();
+    } else if (this.mode === "none" && this.demo) {
+      if (this.demo.state.phase === "match") this.startAttractDemo();
+      if (this.demo) {
+        this.demo.step(dt);
+        this.demo.drainEvents();
+        state = this.demoRenderState();
+      }
     }
     this.scene.update(dt, state);
     this.scene.render();
@@ -804,21 +871,62 @@ class App {
   }
 
   /** Exposed for browser verification. */
-  debug(): { fps: number; mode: string; screen: string; ball: unknown; score: unknown; seat: number; code: string; connected: number; players: number; drill: unknown } {
-    const ball = this.sim ? this.sim.state.ball.pos : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.ball.pos : null;
-    const score = this.sim ? this.sim.state.score : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.score : null;
-    const players: Array<{ connected: boolean }> = this.sim ? this.sim.state.players : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.players : [];
-    const drill = this.drill ? { player: { x: this.drill.state.player.x, y: this.drill.state.player.y }, ball: { x: this.drill.state.ball.x, y: this.drill.state.ball.y, z: this.drill.state.ball.z }, streak: this.drill.state.streak, best: this.drill.state.best } : null;
-    return { fps: Math.round(this.fps.value), mode: this.mode, screen: this.screen, ball, score, seat: this.onlineSeat, code: this.onlineCode, connected: players.filter((p) => p.connected).length, players: players.length, drill };
+  /**
+   * Screen-space layout check: the score bar must not collide with the top-right
+   * buttons, and the local player must sit between the score bar and the touch
+   * pads. Used by the browser gates so "the avatar is off-screen" is a failure.
+   */
+  private layoutCheck(): unknown {
+    const stick = this.controlEls.stick.getBoundingClientRect();
+    const pad = this.controlEls.hitpad.getBoundingClientRect();
+    const padsTop = Math.min(stick.top, pad.top);
+    const bar = this.hud ? this.hud.scoreBar.getBoundingClientRect() : null;
+    const right = this.hud ? this.hud.topRight.getBoundingClientRect() : null;
+    const chipA = this.hud ? this.hud.chipA.getBoundingClientRect() : null;
+    const chipB = this.hud ? this.hud.chipB.getBoundingClientRect() : null;
+    let player: { x: number; y: number } | null = null;
+    if (this.drill) {
+      const p = this.scene.project(this.drill.state.player.x, this.drill.state.player.y, 0);
+      player = { x: Math.round(p.x), y: Math.round(p.y) };
+    } else if (this.sim) {
+      const pl = this.sim.state.players[this.humanIndex];
+      if (pl) { const p = this.scene.project(pl.pos.x, pl.pos.y, 0); player = { x: Math.round(p.x), y: Math.round(p.y) }; }
+    } else if (this.snaps.length) {
+      const pl = this.snaps[this.snaps.length - 1].snap.players.find((q) => q.index === this.onlineSeat);
+      if (pl) { const p = this.scene.project(pl.pos.x, pl.pos.y, 0); player = { x: Math.round(p.x), y: Math.round(p.y) }; }
+    }
+    const hudClear = !!(bar && right && chipA && chipB) && chipB.right <= right.left + 1 && chipA.left >= bar.left - 1;
+    const playerVisible = !!player && player.y > (bar ? bar.bottom + 4 : 0) && player.y < padsTop - 6;
+    return {
+      w: window.innerWidth,
+      h: window.innerHeight,
+      padsTop: Math.round(padsTop),
+      scoreBottom: bar ? Math.round(bar.bottom) : 0,
+      chipBRight: chipB ? Math.round(chipB.right) : 0,
+      topRightLeft: right ? Math.round(right.left) : 0,
+      player,
+      playerVisible,
+      hudClear,
+    };
   }
 
-  api(): { startLocal: (o: { singles: boolean }) => void; startDrill: (k: "wall" | "serve") => void; startOnline: (c: string | undefined, create: boolean) => void; showHome: () => void; showRules: () => void; prefs: Prefs; debug: () => unknown } {
+  debug(): { fps: number; mode: string; screen: string; ball: unknown; score: unknown; seat: number; code: string; connected: number; players: number; drill: unknown; layout: unknown; basis: unknown; teams: unknown; demo: unknown; camera: unknown } {
+    const ball = this.sim ? this.sim.state.ball.pos : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.ball.pos : this.drill ? { x: this.drill.state.ball.x, y: this.drill.state.ball.y, z: this.drill.state.ball.z } : this.demo ? this.demo.state.ball.pos : null;
+    const score = this.sim ? this.sim.state.score : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.score : this.demo ? this.demo.state.score : null;
+    const demo = this.demo ? { players: this.demo.state.players.length, phase: this.demo.state.phase } : null;
+    const players: Array<{ connected: boolean; index: number; team: 0 | 1; bot: boolean }> = this.sim ? this.sim.state.players : this.snaps.length ? this.snaps[this.snaps.length - 1].snap.players : [];
+    const drill = this.drill ? { player: { x: this.drill.state.player.x, y: this.drill.state.player.y }, ball: { x: this.drill.state.ball.x, y: this.drill.state.ball.y, z: this.drill.state.ball.z }, streak: this.drill.state.streak, best: this.drill.state.best, canHit: this.drill.state.canHit } : null;
+    return { fps: Math.round(this.fps.value), mode: this.mode, screen: this.screen, ball, score, seat: this.onlineSeat, code: this.onlineCode, connected: players.filter((p) => p.connected).length, players: players.length, drill, layout: this.layoutCheck(), basis: this.cameraBasis(), teams: players.length ? players.map((p) => ({ seat: p.index, team: p.team, bot: p.bot })) : this.lobbyTeams(), demo, camera: this.scene.cameraInfo() };
+  }
+
+  api(): { startLocal: (o: { singles: boolean }) => void; startDrill: (k: "wall" | "serve") => void; startOnline: (c: string | undefined, create: boolean) => void; showHome: () => void; showRules: () => void; setBand: (far: number, near: number) => void; prefs: Prefs; debug: () => unknown } {
     return {
       startLocal: (o) => this.startLocal(o),
       startDrill: (k) => this.startDrill(k),
       startOnline: (c, create) => this.startOnline(c, create),
       showHome: () => this.showHome(),
       showRules: () => this.showRules(),
+      setBand: (far: number, near: number) => this.scene.setBand(far, near),
       prefs: this.prefs,
       debug: () => this.debug(),
     };

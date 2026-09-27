@@ -1,65 +1,274 @@
 {
   "steps": [
     {
-      "step": "wall drill mode runs",
+      "step": "home renders 320x640",
       "ok": true,
-      "detail": "{\"fps\":15,\"mode\":\"wall\",\"screen\":\"drill\",\"ball\":null,\"score\":null,\"seat\":0,\"code\":\"\",\"connected\":0,\"players\":0}"
+      "detail": "{\"brand\":true,\"bad\":false,\"geo\":{\"sw\":320,\"iw\":320,\"sh\":640,\"ih\":640}}"
     },
     {
-      "step": "wall drill counted controlled returns",
-      "ok": false,
-      "detail": "streak=0"
-    },
-    {
-      "step": "room code issued",
+      "step": "home hero shows a live rally 320x640",
       "ok": true,
-      "detail": "9ECGJ"
+      "detail": "{\"fourBots\":true,\"moved\":true,\"rallied\":true,\"last\":{\"players\":4,\"phase\":\"serve\"}}"
     },
     {
-      "step": "second client joined the room",
+      "step": "home renders 390x844",
       "ok": true,
-      "detail": "{\"fps\":1,\"mode\":\"online\",\"screen\":\"lobby\",\"ball\":null,\"score\":null,\"seat\":2,\"code\":\"9ECGJ\",\"connected\":0,\"players\":0}"
+      "detail": "{\"brand\":true,\"bad\":false,\"geo\":{\"sw\":390,\"iw\":390,\"sh\":844,\"ih\":844}}"
     },
     {
-      "step": "guest receives authoritative snapshots",
+      "step": "home hero shows a live rally 390x844",
       "ok": true,
-      "detail": "{\"fps\":3,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":2,\"code\":\"9ECGJ\",\"connected\":2,\"players\":4}"
+      "detail": "{\"fourBots\":true,\"moved\":true,\"rallied\":true,\"last\":{\"players\":4,\"phase\":\"serve\"}}"
     },
     {
-      "step": "online point decided by the server",
+      "step": "home renders landscape",
+      "ok": true,
+      "detail": "{\"brand\":true,\"bad\":false,\"geo\":{\"sw\":844,\"iw\":844,\"sh\":390,\"ih\":390}}"
+    },
+    {
+      "step": "home hero shows a live rally landscape",
+      "ok": true,
+      "detail": "{\"fourBots\":true,\"moved\":true,\"rallied\":true,\"last\":{\"players\":4,\"phase\":\"rally\"}}"
+    },
+    {
+      "step": "rules show seven lessons",
+      "ok": true,
+      "detail": "count=7"
+    },
+    {
+      "step": "rules lesson 7 teaches pair movement",
+      "ok": true,
+      "detail": "shift and cover as a pair\nMove as a pair\n\nShift left and right together with your partner and close the middle as one unit — never leave your partner "
+    },
+    {
+      "step": "rules fit the viewport",
+      "ok": true,
+      "detail": "{\"sw\":390,\"iw\":390,\"panel\":383}"
+    },
+    {
+      "step": "bot match starts with four players 390x844",
+      "ok": true,
+      "detail": "{\"players\":4}"
+    },
+    {
+      "step": "score chips do not collide with the buttons 390x844",
+      "ok": true,
+      "detail": "{\"w\":390,\"h\":844,\"padsTop\":680,\"scoreBottom\":56,\"chipBRight\":270,\"topRightLeft\":278,\"player\":{\"x\":228,\"y\":544},\"playerVisible\":true,\"hudClear\":true}"
+    },
+    {
+      "step": "local player stays above the touch pads 390x844",
+      "ok": true,
+      "detail": "{\"w\":390,\"h\":844,\"padsTop\":680,\"scoreBottom\":56,\"chipBRight\":270,\"topRightLeft\":278,\"player\":{\"x\":228,\"y\":544},\"playerVisible\":true,\"hudClear\":true}"
+    },
+    {
+      "step": "a point is scored in bot mode",
       "ok": true,
       "detail": "{\"points\":[1,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null}"
     },
     {
-      "step": "reconnect reclaims the same seat",
+      "step": "ball stays inside the court",
       "ok": true,
-      "detail": "before=2 after={\"fps\":1,\"mode\":\"online\",\"screen\":\"lobby\",\"ball\":null,\"score\":null,\"seat\":2,\"code\":\"9ECGJ\",\"connected\":0,\"players\":0}"
+      "detail": "{\"x\":4.815320358069175,\"y\":13.68991152543982,\"z\":0.032}"
     },
     {
-      "step": "four distinct human seats",
+      "step": "bot match starts with four players 320x640",
+      "ok": true,
+      "detail": "{\"players\":4}"
+    },
+    {
+      "step": "score chips do not collide with the buttons 320x640",
+      "ok": true,
+      "detail": "{\"w\":320,\"h\":640,\"padsTop\":492,\"scoreBottom\":50,\"chipBRight\":214,\"topRightLeft\":222,\"player\":{\"x\":185,\"y\":381},\"playerVisible\":true,\"hudClear\":true}"
+    },
+    {
+      "step": "local player stays above the touch pads 320x640",
+      "ok": true,
+      "detail": "{\"w\":320,\"h\":640,\"padsTop\":492,\"scoreBottom\":50,\"chipBRight\":214,\"topRightLeft\":222,\"player\":{\"x\":185,\"y\":381},\"playerVisible\":true,\"hudClear\":true}"
+    },
+    {
+      "step": "bot match starts with four players landscape",
+      "ok": true,
+      "detail": "{\"players\":4}"
+    },
+    {
+      "step": "score chips do not collide with the buttons landscape",
+      "ok": true,
+      "detail": "{\"w\":844,\"h\":390,\"padsTop\":248,\"scoreBottom\":56,\"chipBRight\":498,\"topRightLeft\":732,\"player\":{\"x\":448,\"y\":122},\"playerVisible\":true,\"hudClear\":true}"
+    },
+    {
+      "step": "local player stays above the touch pads landscape",
+      "ok": true,
+      "detail": "{\"w\":844,\"h\":390,\"padsTop\":248,\"scoreBottom\":56,\"chipBRight\":498,\"topRightLeft\":732,\"player\":{\"x\":448,\"y\":122},\"playerVisible\":true,\"hudClear\":true}"
+    },
+    {
+      "step": "wall drill mode runs",
+      "ok": true,
+      "detail": "{\"mode\":\"wall\"}"
+    },
+    {
+      "step": "wall drill player visible above the pads",
+      "ok": true,
+      "detail": "{\"w\":390,\"h\":844,\"padsTop\":680,\"scoreBottom\":56,\"chipBRight\":270,\"topRightLeft\":278,\"player\":{\"x\":159,\"y\":417},\"playerVisible\":true,\"hudClear\":true}"
+    },
+    {
+      "step": "wall drill earns a controlled return from pointer input",
+      "ok": true,
+      "detail": "{\"streak\":1,\"best\":1,\"note\":\"controlled return earned\"}"
+    },
+    {
+      "step": "room code issued",
+      "ok": true,
+      "detail": "HNRQZ"
+    },
+    {
+      "step": "guest welcomed explicitly",
+      "ok": true,
+      "detail": "{\"seat\":2,\"code\":\"HNRQZ\"}"
+    },
+    {
+      "step": "guest has a distinct seat",
+      "ok": true,
+      "detail": "a=0 b=2"
+    },
+    {
+      "step": "lobby shows two per team",
+      "ok": true,
+      "detail": "[\"Player12 · Coral\",\"Bot 2 (offline) · Coral\",\"Player42 · Ice\",\"Bot 4 (offline) · Ice\"]"
+    },
+    {
+      "step": "two-client match starts",
       "ok": false,
-      "detail": "[0,2,1,0]"
+      "detail": "null"
     },
     {
-      "step": "four-human match started",
-      "ok": true,
-      "detail": "{\"fps\":3,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":-2.1,\"y\":6.3,\"z\":0.55},\"score\":{\"points\":[0,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"JKKK9\",\"connected\":4,\"players\":4}"
+      "step": "snapshot teams follow the pair split",
+      "ok": false,
+      "detail": "[]"
     },
     {
-      "step": "four-player authoritative score moves",
+      "step": "online point decided by the server",
+      "ok": false,
+      "detail": "timed out"
+    },
+    {
+      "step": "every client was welcomed",
       "ok": true,
-      "detail": "{\"fps\":4,\"mode\":\"online\",\"screen\":\"play\",\"ball\":{\"x\":4.786494593682076,\"y\":13.688132584343604,\"z\":0.032},\"score\":{\"points\":[1,0],\"games\":[0,0],\"sets\":[0,0],\"tiebreak\":null},\"seat\":0,\"code\":\"JKKK9\",\"connected\":4,\"players\":4}"
+      "detail": "[0,2,1,3]"
+    },
+    {
+      "step": "four clients hold four distinct seats",
+      "ok": true,
+      "detail": "[0,2,1,3]"
+    },
+    {
+      "step": "every client's roster shows the correct pair teams",
+      "ok": true,
+      "detail": "[{\"seat\":0,\"team\":0,\"name\":\"Player64\"},{\"seat\":1,\"team\":0,\"name\":\"Bot 2\"},{\"seat\":2,\"team\":1,\"name\":\"Player58\"},{\"seat\":3,\"team\":1,\"name\":\"Bot 4\"}]"
+    },
+    {
+      "step": "four-player lobby is two Coral and two Ice",
+      "ok": true,
+      "detail": "[\"Player64 · Coral\",\"Player24 · Coral\",\"Player58 · Ice\",\"Player10 · Ice\"]"
+    },
+    {
+      "step": "fifth client is refused in the browser",
+      "ok": true,
+      "detail": "{\"code\":\"\",\"seat\":0}"
+    },
+    {
+      "step": "host still holds four humans after the refusal",
+      "ok": true,
+      "detail": "[\"Player64 · Coral\",\"Player24 · Coral\",\"Player58 · Ice\",\"Player10 · Ice\"]"
+    },
+    {
+      "step": "four-human match runs with four connected seats",
+      "ok": true,
+      "detail": "{\"connected\":4,\"players\":4}"
+    },
+    {
+      "step": "four-client snapshot teams follow the pair split",
+      "ok": true,
+      "detail": "[{\"seat\":0,\"team\":0,\"bot\":false},{\"seat\":1,\"team\":0,\"bot\":false},{\"seat\":2,\"team\":1,\"bot\":false},{\"seat\":3,\"team\":1,\"bot\":false}]"
     }
   ],
   "consoleErrors": [],
   "pageErrors": [],
-  "shots": [
-    "artifacts/wall-390x844.png",
-    "artifacts/room-host-390x844.png",
-    "artifacts/room4-390x844.png"
-  ],
   "rooms": {
-    "two": "9ECGJ",
-    "four": "JKKK9"
+    "two": "HNRQZ",
+    "four": "SULAK"
+  },
+  "layout": {
+    "390x844": {
+      "w": 390,
+      "h": 844,
+      "padsTop": 680,
+      "scoreBottom": 56,
+      "chipBRight": 270,
+      "topRightLeft": 278,
+      "player": {
+        "x": 228,
+        "y": 544
+      },
+      "playerVisible": true,
+      "hudClear": true
+    },
+    "320x640": {
+      "w": 320,
+      "h": 640,
+      "padsTop": 492,
+      "scoreBottom": 50,
+      "chipBRight": 214,
+      "topRightLeft": 222,
+      "player": {
+        "x": 185,
+        "y": 381
+      },
+      "playerVisible": true,
+      "hudClear": true
+    },
+    "landscape": {
+      "w": 844,
+      "h": 390,
+      "padsTop": 248,
+      "scoreBottom": 56,
+      "chipBRight": 498,
+      "topRightLeft": 732,
+      "player": {
+        "x": 448,
+        "y": 122
+      },
+      "playerVisible": true,
+      "hudClear": true
+    }
+  },
+  "drill": {
+    "streak": 1,
+    "best": 1,
+    "note": "controlled return earned"
+  },
+  "seats": {
+    "lobbyTwo": [
+      "Player12 · Coral",
+      "Bot 2 (offline) · Coral",
+      "Player42 · Ice",
+      "Bot 4 (offline) · Ice"
+    ],
+    "match": [],
+    "browserFour": [
+      0,
+      2,
+      1,
+      3
+    ],
+    "lobbyFour": [
+      "Player64 · Coral",
+      "Player24 · Coral",
+      "Player58 · Ice",
+      "Player10 · Ice"
+    ],
+    "fifth": {
+      "code": "",
+      "seat": 0
+    }
   }
 }

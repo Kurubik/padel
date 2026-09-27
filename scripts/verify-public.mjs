@@ -62,8 +62,15 @@ try {
   report.room = code;
   const b = await mk("guest");
   await b.page.goto(BASE + "/?room=" + code, { waitUntil: "load" });
-  await sleep(3500);
-  const db = await debug(b.page);
+  const db = await (async () => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < 30000) {
+      const d = await debug(b.page);
+      if (d && d.code === code) return d;
+      await sleep(700);
+    }
+    return null;
+  })();
   log("guest joined over the public edge", !!db && db.code === code && db.seat !== 0, JSON.stringify(db));
   await a.page.getByText("Start match", { exact: true }).first().click();
   const playing = await (async () => {

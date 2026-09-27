@@ -19,11 +19,18 @@ export type DrillState = {
   messageKey: string;
   /** Set when a serve drill ball lands legally so the UI can flash. */
   lastGood: boolean;
+  /** True while a swing now would connect — the UI lights the hit pad on it. */
+  canHit: boolean;
 };
 
 const PLAYER_SPEED = 4.4;
-const REACH = 1.34;
-const MAX_HIT_HEIGHT = 2.45;
+/**
+ * Drill contact window. Deliberately more generous than the match reach (1.34 m):
+ * a training drill must be winnable with one thumb on a phone, and drills are
+ * never presented as official play.
+ */
+const DRILL_REACH = 1.95;
+const DRILL_MAX_HIT_HEIGHT = 2.7;
 
 /**
  * Training drills. Wall practice feeds balls that the single player must return
@@ -47,6 +54,7 @@ export class WallDrill {
       attempts: 0,
       messageKey: "",
       lastGood: true,
+      canHit: false,
     };
     this.feed();
   }
@@ -62,6 +70,8 @@ export class WallDrill {
     if (s.player.swing > 0) s.player.swing = Math.max(0, s.player.swing - dt);
     if (hit) this.tryHit(hit, events);
     this.stepBall(dt, events);
+    const b = s.ball;
+    s.canHit = Math.hypot(b.x - s.player.x, b.y - s.player.y) <= DRILL_REACH && b.z > 0 && b.z <= DRILL_MAX_HIT_HEIGHT;
     return events;
   }
 
@@ -69,10 +79,10 @@ export class WallDrill {
     const s = this.state;
     const b = s.ball;
     const d = Math.hypot(b.x - s.player.x, b.y - s.player.y);
-    if (d > REACH || b.z > MAX_HIT_HEIGHT || b.z <= 0) return;
+    if (d > DRILL_REACH || b.z > DRILL_MAX_HIT_HEIGHT || b.z <= 0) return;
     s.player.swing = 0.28;
     const dir = norm2({ x: hit.aim.x, y: hit.aim.y });
-    const speed = hit.type === "lob" ? 9 : hit.type === "smash" ? 17 : 14.5;
+    const speed = hit.type === "lob" ? 8.5 : hit.type === "smash" ? 16 : 12.5;
     const elev = hit.type === "lob" ? 0.7 : hit.type === "smash" ? -0.25 : 0.12;
     b.vx = dir.x * speed * Math.cos(elev);
     b.vy = dir.y * speed * Math.cos(elev);
@@ -175,11 +185,24 @@ export class WallDrill {
       this.launch(sp.x, sp.y, 0.55, (box.xMin + box.xMax) / 2, (box.yMin + box.yMax) / 2 + 0.4);
       return;
     }
-    const tx = this.rng.range(-2, 2);
-    const ty = this.rng.range(14.5, 17.5);
-    const sx = this.rng.range(-1.5, 1.5);
-    const sy = 11.4;
-    this.launch(sx, sy, 0.4, tx, ty);
+    // Feed gently toward wherever the player stands: the first contact of a
+    // rally drill should never require a sprint.
+    const tx = clamp(s.player.x + this.rng.range(-1.0, 1.0), -4.2, 4.2);
+    const ty = clamp(s.player.y + this.rng.range(-1.1, 0.5), 12, 19.2);
+    const sx = clamp(tx + this.rng.range(-2.4, 2.4), -4.2, 4.2);
+    this.launchArc(sx, 11.2, 0.95, tx, ty, 1.05);
+  }
+
+  /** Simple ballistic feed: no net to clear, so no serve solver involved. */
+  private launchArc(sx: number, sy: number, sz: number, tx: number, ty: number, T: number): void {
+    const s = this.state;
+    const r = COURT.ballRadius;
+    s.ball.x = sx;
+    s.ball.y = sy;
+    s.ball.z = sz;
+    s.ball.vx = (tx - sx) / T;
+    s.ball.vy = (ty - sy) / T;
+    s.ball.vz = (r - sz - 0.5 * COURT.gravity * T * T) / T;
   }
 
   private launch(sx: number, sy: number, sz: number, tx: number, ty: number): void {
